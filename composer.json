@@ -1,0 +1,11 @@
+{
+    "name": "pepijno/sphream",
+    "type": "library",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Sphream\\": "src/"
+        }
+    },
+    "description": "A library for using functional style streams"
+}
