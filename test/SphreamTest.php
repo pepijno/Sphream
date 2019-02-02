@@ -67,10 +67,16 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$sphream->first();
 	}
 
-	public function testIfLastReturnsLastFromArrayUsedToCreateSphream()
+	public function testIfLastReturnsLastIntFromArrayOfIntsUsedToCreateSphream()
 	{
 		$sphream = Sphream::of([52, 785, 582]);
 		$this->assertEquals(582, $sphream->last());
+	}
+
+	public function testIfLastReturnsLastStringFromArrayOfStringsUsedToCreateSphream()
+	{
+		$sphream = Sphream::of(["Hell", "o W", "orld!"]);
+		$this->assertEquals("orld!", $sphream->last());
 	}
 
 	public function testIfLastThrowsEmptySphreamFromSphreamCreatedFromEmptyArray()
@@ -80,15 +86,26 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$sphream->last();
 	}
 
-	public function testIfLastReturnsLastFromGeneratorUsedToCreateSphream()
+	public function testIfLastReturnsLastIntFromGeneratorOfIntsUsedToCreateSphream()
 	{
 		$generator = function () {
-			yield "a";
-			yield new Exception();
+			yield 4;
+			yield 91;
 			yield 8;
 		};
 		$sphream = Sphream::of($generator());
 		$this->assertEquals(8, $sphream->last());
+	}
+
+	public function testIfLastReturnsLastStringFromGeneratorOfStringsUsedToCreateSphream()
+	{
+		$generator = function () {
+			yield "Existential";
+			yield "Crab";
+			yield "Bread";
+		};
+		$sphream = Sphream::of($generator());
+		$this->assertEquals("Bread", $sphream->last());
 	}
 
 	public function testIfLastThrowsEmptySphreamFromSphreamCreatedFromEmptyGenerator()

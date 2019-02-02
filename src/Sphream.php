@@ -50,6 +50,5 @@ class Sphream
 				return $item;
 			}
 		}
-		return 582;
 	}
 }
