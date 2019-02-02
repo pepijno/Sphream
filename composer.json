@@ -1,7 +1,9 @@
 {
     "name": "pepijno/sphream",
     "type": "library",
-    "require": {},
+    "require": {
+        "phpunit/phpunit": "^8.0"
+    },
     "autoload": {
         "psr-4": {
             "Sphream\\": "src/"
