@@ -30,6 +30,19 @@ class Sphream
 		return self::of($generator());
 	}
 
+	public static function repeat($toRepeat, int $repeatAmount): Sphream
+	{
+		if ($repeatAmount < 0) {
+			throw new \InvalidArgumentException("Amount to repeat cannot be negative");
+		}
+		$generator = function () use ($toRepeat, $repeatAmount) {
+			for ($i = 0; $i < $repeatAmount; $i++) {
+				yield $toRepeat;
+			}
+		};
+		return new self($generator());
+	}
+
 	public function first()
 	{
 		if (is_array($this->iterable)) {

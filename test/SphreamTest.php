@@ -195,4 +195,16 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$this->expectException(InvalidArgumentException::class);
 		Sphream::range(5, 4);
 	}
+
+	public function testIfRepeatThrowsInvalidArgumentIfSecondArgumentIsNegative()
+	{
+		$this->expectException(InvalidArgumentException::class);
+		Sphream::repeat('foo', -1);
+	}
+
+	public function testIfRepeatReturnsSphreamWithFirstArgumentRepeated()
+	{
+		$sphream = Sphream::repeat('foo', 3);
+		$this->assertEquals(['foo', 'foo', 'foo'], $sphream->toArray());
+	}
 }
