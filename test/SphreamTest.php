@@ -207,4 +207,13 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$sphream = Sphream::repeat('foo', 3);
 		$this->assertEquals(['foo', 'foo', 'foo'], $sphream->toArray());
 	}
+
+	public function testIfGenerateReturnsSphream()
+	{
+		$supplier = function () {
+			return 4;
+		};
+		$sphream = Sphream::generate($supplier);
+		$this->assertInstanceOf(Sphream::class, $sphream);
+	}
 }

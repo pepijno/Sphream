@@ -43,6 +43,16 @@ class Sphream
 		return new self($generator());
 	}
 
+	public static function generate(callable $supplier): Sphream
+	{
+		$generator = function () use ($supplier) {
+			while (true) {
+				yield $supplier();
+			}
+		};
+		return new self($generator());
+	}
+
 	public function first()
 	{
 		if (is_array($this->iterable)) {
