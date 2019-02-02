@@ -27,66 +27,113 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$this->assertInstanceOf(Sphream::class, $sphream);
 	}
 
-	public function test_if_first_returns_string_from_Sphream_created_from_array_with_first_element_string()
+	/**
+	 * @dataProvider emptySphreamProvider
+	 */
+	public function test_if_first_throws_EmptySphream_from_empty_Sphream($ofInput)
 	{
-		$sphream = Sphream::of(["a", "b", "5"]);
-		$this->assertEquals("a", $sphream->first());
-	}
-
-	public function test_if_first_returns_int_from_Sphream_created_from_array_with_first_element_int()
-	{
-		$sphream = Sphream::of([83, 23523, 1]);
-		$this->assertEquals(83, $sphream->first());
-	}
-
-	public function test_if_first_throws_EmptySphream_from_Sphream_created_from_empty_array()
-	{
-		$sphream = Sphream::of([]);
+		$sphream = Sphream::of($ofInput);
 		$this->expectException(EmptySphream::class);
 		$sphream->first();
 	}
 
-	public function test_if_first_returns_first_generated_item_from_generated_from_Sphream_created_from_generator()
-	{
-		$generator = function () {
-			yield 74;
-			yield 9;
-			yield new Exception();
-		};
-		$sphream = Sphream::of($generator());
-		$this->assertEquals(74, $sphream->first());
-	}
-
-	public function test_if_first_throws_EmptySphream_from_Sphream_created_form_empty_generator()
+	public function emptySphreamProvider()
 	{
 		$generator = function () {
 			yield from [];
 		};
+		return [
+			[ [] ],
+			[ $generator() ],
+		];
+	}
+
+	/**
+	 * @dataProvider firstElementFromArrayProvider
+	 */
+	public function test_if_first_returns_first_element_from_Sphream_created_from_array($array, $expected)
+	{
+		$sphream = Sphream::of($array);
+		$this->assertEquals($expected, $sphream->first());
+	}
+
+	public function firstElementFromArrayProvider()
+	{
+		return [
+			[ ["a", "b", "5"], "a"],
+			[ [83, 23523, 1], 83],
+			[ ["Hello", new Exception(), "World"], "Hello"],
+			[ [[], [1], [1, 2]], []],
+		];
+	}
+
+	/**
+	 * @dataProvider firstElementFromGeneratorProvider
+	 */
+	public function test_if_first_returns_first_generated_item_from_generated_Sphream($generator, $expectedFirst)
+	{
 		$sphream = Sphream::of($generator());
-		$this->expectException(EmptySphream::class);
-		$sphream->first();
+		$this->assertEquals($expectedFirst, $sphream->first());
 	}
 
-	public function test_if_last_returns_last_int_from_array_of_ints_used_to_create_Sphream()
+	public function firstElementFromGeneratorProvider()
 	{
-		$sphream = Sphream::of([52, 785, 582]);
-		$this->assertEquals(582, $sphream->last());
+		return [
+			[ function () {
+				yield "a";
+				yield "b";
+				yield "5";
+			}, "a"],
+			[ function () {
+				yield -99;
+				yield 92137;
+				yield 239;
+			}, -99],
+			[ function () {
+				yield new Exception();
+				yield new EmptySphream();
+			}, new Exception()],
+			[ function () {
+				yield [];
+				yield "ou";
+				yield [[]];
+			}, []],
+		];
 	}
 
-	public function test_if_last_returns_last_string_from_array_of_strings_used_to_create_Sphream()
+	/**
+	 * @dataProvider emptySphreamProvider
+	 */
+	public function test_if_last_throws_EmptySphream_from_empty_Sphream($ofInput)
 	{
-		$sphream = Sphream::of(["Hell", "o W", "orld!"]);
-		$this->assertEquals("orld!", $sphream->last());
-	}
-
-	public function test_if_last_throws_EmptySphream_from_Sphream_created_from_empty_array()
-	{
-		$sphream = Sphream::of([]);
+		$sphream = Sphream::of($ofInput);
 		$this->expectException(EmptySphream::class);
 		$sphream->last();
 	}
 
-	public function test_if_last_returns_last_int_from_generator_of_ints_used_to_create_Sphream()
+	/**
+	 * @dataProvider lastElementFromArrayProvider
+	 */
+	public function test_if_last_returns_last_element_from_array_used_to_create_Sphream($array, $expectedLast)
+	{
+		$sphream = Sphream::of($array);
+		$this->assertEquals($expectedLast, $sphream->last());
+	}
+
+	public function lastElementFromArrayProvider()
+	{
+		return [
+			[ ["a", "b", "5"], "5"],
+			[ [83, 23523, 1], 1],
+			[ ["Hello", new Exception(), "World"], "World"],
+			[ [[], [1], [1, 2]], [1, 2]],
+		];
+	}
+
+	/**
+	 * @dataProvider lastElementFromGeneratorProvider
+	 */
+	public function test_if_last_returns_last_generated_item_from_Sphream()
 	{
 		$generator = function () {
 			yield 4;
@@ -97,115 +144,148 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals(8, $sphream->last());
 	}
 
-	public function test_if_last_returns_last_string_from_generator_of_trings_used_to_create_Sphream()
+	public function lastElementFromGeneratorProvider()
 	{
-		$generator = function () {
-			yield "Existential";
-			yield "Crab";
-			yield "Bread";
-		};
-		$sphream = Sphream::of($generator());
-		$this->assertEquals("Bread", $sphream->last());
+		return [
+			[ function () {
+				yield "a";
+				yield "b";
+				yield "5";
+			}, "5"],
+			[ function () {
+				yield -99;
+				yield 92137;
+				yield 239;
+			}, 239],
+			[ function () {
+				yield new Exception();
+				yield new EmptySphream();
+			}, new EmptySphream()],
+			[ function () {
+				yield [];
+				yield "ou";
+				yield [[]];
+			}, [[]]],
+		];
 	}
 
-	public function test_if_last_throws_EmptySphream_from_Sphream_created_from_empty_generator()
+	/**
+	 * @dataProvider countSizeProvider
+	 */
+	public function test_if_count_returns_size_of_Sphream($ofInput, $expectedSize)
 	{
-		$generator = function () {
-			yield from [];
-		};
-		$sphream = Sphream::of($generator());
-		$this->expectException(EmptySphream::class);
-		$sphream->last();
+		$sphream = Sphream::of($ofInput);
+		$this->assertEquals($expectedSize, $sphream->count());
 	}
 
-	public function test_if_count_returns_zero_with_Sphream_created_from_empty_array()
+	public function countSizeProvider()
 	{
-		$sphream = Sphream::of([]);
-		$this->assertEquals(0, $sphream->count());
+		return [
+			[ [], 0],
+			[ [8], 1],
+			[ [38, 182, 12, 12, 2], 5],
+			[ (function () { yield from []; })(), 0],
+			[ (function () {
+				yield 1;
+			})(), 1],
+			[ (function () {
+				yield 78;
+				yield 234;
+			})(), 2],
+		];
 	}
 
-	public function test_if_count_returns_the_size_of_array_used_to_create_Sphream()
+	/**
+	 * @dataProvider toArrayProvider
+	 */
+	public function test_if_toArray_returns_empty_array_from_Sphream_created_form_empty_array($ofInput, $expectedArray)
 	{
-		$sphream = Sphream::of([5, 876, 2]);
-		$this->assertEquals(3, $sphream->count());
+		$sphream = Sphream::of($ofInput);
+		$this->assertEquals($expectedArray, $sphream->toArray());
 	}
 
-	public function test_if_count_returns_zero_with_Sphream_created_from_empty_generator()
+	public function toArrayProvider()
 	{
-		$generator = function () {
-			yield from [];
-		};
-		$sphream = Sphream::of($generator());
-		$this->assertEquals(0, $sphream->count());
+		return [
+			[ [], [] ],
+			[ [7], [7] ],
+			[ ["Bread", "crumbs"], ["Bread", "crumbs"] ],
+			[ (function () { yield from []; })(), [] ],
+			[ (function () {
+				yield 7689;
+				yield "Grant";
+				yield new EmptySphream();
+			})(), [7689, "Grant", new EmptySphream()] ],
+		];
 	}
 
-	public function test_if_count_returns_size_of_generator_used_to_create_Sphream()
-	{
-		$generator = function () {
-			yield from [54, 323, 235];
-		};
-		$sphream = Sphream::of($generator());
-		$this->assertEquals(3, $sphream->count());
-	}
-
-	public function test_if_toArray_returns_empty_array_from_Sphream_created_form_empty_array()
-	{
-		$sphream = Sphream::of([]);
-		$this->assertEquals([], $sphream->toArray());
-	}
-
-	public function test_if_toArray_returns_empty_array_from_Sphream_created_from_empty_generator()
-	{
-		$generator = function () {
-			yield from [];
-		};
-		$sphream = Sphream::of($generator());
-		$this->assertEquals([], $sphream->toArray());
-	}
-
-	public function test_if_toArray_returns_array_used_to_create_Sphream()
-	{
-		$sphream = Sphream::of([432, 234, 2]);
-		$this->assertEquals([432, 234, 2], $sphream->toArray());
-	}
-
-	public function test_if_toArray_returns_elements_form_generator_used_to_create_Sphream()
-	{
-		$generator = function () {
-			yield from [432, 234, 2];
-		};
-		$sphream = Sphream::of($generator());
-		$this->assertEquals([432, 234, 2], $sphream->toArray());
-	}
-
-	public function test_if_range_returns_EmptySphream_with_inputs_equal()
-	{
-		$sphream = Sphream::range(4, 4);
-		$this->assertEquals(0, $sphream->count());
-	}
-
-	public function test_if_range_returns_Sphream_with_integers()
-	{
-		$sphream = Sphream::range(3, 9);
-		$this->assertEquals([3, 4, 5, 6, 7, 8], $sphream->toArray());
-	}
-
-	public function test_if_range_throws_InvalidArgumentException_if_first_argument_is_larger()
+	/**
+	 * @dataProvider rangeExpectionProvider
+	 */
+	public function test_if_range_throws_InvalidArgumentException_if_first_argument_is_larger($from, $to)
 	{
 		$this->expectException(InvalidArgumentException::class);
-		Sphream::range(5, 4);
+		Sphream::range($from, $to);
 	}
 
-	public function test_if_repeat_throws_invalid_argument_if_second_argument_is_negative()
+	public function rangeExpectionProvider()
+	{
+		return [
+			[ 5, 4 ],
+			[ 89, -14 ],
+			[ -1242345234234, -988797897897897]
+		];
+	}
+
+	/**
+	 * @dataProvider rangeProvider
+	 */
+	public function test_if_range_returns_Sphream_with_correct_array($from, $to, $expectedArray)
+	{
+		$sphream = Sphream::range($from, $to);
+		$this->assertEquals($expectedArray, $sphream->toArray());
+	}
+
+	public function rangeProvider()
+	{
+		return [
+			[ 1, 2, [1] ],
+			[ 67, 78, [67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77] ]
+		];
+	}
+
+	/**
+	 * @dataProvider repeatExceptionProvider
+	 */
+	public function test_if_repeat_throws_InvalidArgumentException_if_second_argument_is_negative($toRepeat, $amount)
 	{
 		$this->expectException(InvalidArgumentException::class);
-		Sphream::repeat('foo', -1);
+		Sphream::repeat($toRepeat, $amount);
 	}
 
-	public function tests_if_repeat_returns_Sphream_with_first_argument_repeated()
+	public function repeatExceptionProvider()
 	{
-		$sphream = Sphream::repeat('foo', 3);
-		$this->assertEquals(['foo', 'foo', 'foo'], $sphream->toArray());
+		return [
+			[ 'foo', -1 ],
+			[ new Exception(), -2378940 ]
+		];
+	}
+
+	/**
+	 * @dataProvider repeatProvider
+	 */
+	public function tests_if_repeat_returns_Sphream_with_first_argument_repeated($toRepeat, $amount, $expectedArray)
+	{
+		$sphream = Sphream::repeat($toRepeat, $amount);
+		$this->assertEquals($expectedArray, $sphream->toArray());
+	}
+
+	public function repeatProvider()
+	{
+		return [
+			[ 'bar', 1, ['bar'] ],
+			[ 987, 3, [ 987, 987, 987] ],
+		];
 	}
 
 	public function test_if_generate_returns_Sphream()
