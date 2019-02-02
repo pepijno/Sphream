@@ -51,4 +51,20 @@ class Sphream
 			}
 		}
 	}
+
+	public function count(): int
+	{
+		if (is_array($this->iterable)) {
+			return sizeof($this->iterable);
+		}
+		return iterator_count($this->iterable);
+	}
+
+	public function toArray(): array
+	{
+		if (is_array($this->iterable)) {
+			return $this->iterable;
+		}
+		return iterator_to_array($this->iterable);
+	}
 }

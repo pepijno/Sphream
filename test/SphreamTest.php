@@ -117,4 +117,65 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$this->expectException(EmptySphream::class);
 		$sphream->last();
 	}
+
+	public function testIfCountReturnsZeroWithSphreamCreatedFromEmptyArray()
+	{
+		$sphream = Sphream::of([]);
+		$this->assertEquals(0, $sphream->count());
+	}
+
+	public function testIfCountReturnsTheSizeOfArrayUsedToCreateSphream()
+	{
+		$sphream = Sphream::of([5, 876, 2]);
+		$this->assertEquals(3, $sphream->count());
+	}
+
+	public function testIfCountReturnsZeroWithSphreamCreatedFromEmptyGenerator()
+	{
+		$generator = function () {
+			yield from [];
+		};
+		$sphream = Sphream::of($generator());
+		$this->assertEquals(0, $sphream->count());
+	}
+
+	public function testIfCountReturnsSizeOfGeneratorUsedToCreateSphream()
+	{
+		$generator = function () {
+			yield from [54, 323, 235];
+		};
+		$sphream = Sphream::of($generator());
+		$this->assertEquals(3, $sphream->count());
+	}
+
+	public function testIfToArrayReturnsEmptyArrayFromSphreamCreatedFormEmptyArray()
+	{
+		$sphream = Sphream::of([]);
+		$this->assertEquals([], $sphream->toArray());
+	}
+
+	public function testIfToArrayReturnsEmptyArrayFromSphreamCreatedFromEmptyGenerator()
+	{
+		$generator = function () {
+			yield from [];
+		};
+		$sphream = Sphream::of($generator());
+		$this->assertEquals([], $sphream->toArray());
+	}
+
+	public function testIfToArrayReturnsArrayUsedToCreateSphream()
+	{
+		$sphream = Sphream::of([432, 234, 2]);
+		$this->assertEquals([432, 234, 2], $sphream->toArray());
+	}
+
+	public function testIfToArrayReturnsElementsFormGeneratorUsedToCreateSphream()
+	{
+		$generator = function () {
+			yield from [432, 234, 2];
+		};
+		$sphream = Sphream::of($generator());
+		$this->assertEquals([432, 234, 2], $sphream->toArray());
+	}
+
 }
