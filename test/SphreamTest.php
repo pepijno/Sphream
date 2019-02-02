@@ -178,4 +178,21 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals([432, 234, 2], $sphream->toArray());
 	}
 
+	public function testIfRangeReturnsEmptySphreamWithInputsEqual()
+	{
+		$sphream = Sphream::range(4, 4);
+		$this->assertEquals(0, $sphream->count());
+	}
+
+	public function testIfRangeReturnsSphreamWithIntegers()
+	{
+		$sphream = Sphream::range(3, 9);
+		$this->assertEquals([3, 4, 5, 6, 7, 8], $sphream->toArray());
+	}
+
+	public function testIfRangeThrowsInvalidExceptionIfFirstArgumentIsLarger()
+	{
+		$this->expectException(InvalidArgumentException::class);
+		Sphream::range(5, 4);
+	}
 }

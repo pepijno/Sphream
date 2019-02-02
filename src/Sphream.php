@@ -17,6 +17,19 @@ class Sphream
 		return new self($iterable);
 	}
 
+	public static function range(int $from, int $to): Sphream
+	{
+		if ($from > $to) {
+			throw new \InvalidArgumentException("First argument must be smaller than second argument");
+		}
+		$generator = function () use ($from, $to) {
+			for ($i = $from; $i < $to; $i++) {
+				yield $i;
+			}
+		};
+		return self::of($generator());
+	}
+
 	public function first()
 	{
 		if (is_array($this->iterable)) {
