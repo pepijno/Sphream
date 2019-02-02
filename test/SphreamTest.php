@@ -117,4 +117,103 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$this->expectException(EmptySphream::class);
 		$sphream->last();
 	}
+
+	public function testIfCountReturnsZeroWithSphreamCreatedFromEmptyArray()
+	{
+		$sphream = Sphream::of([]);
+		$this->assertEquals(0, $sphream->count());
+	}
+
+	public function testIfCountReturnsTheSizeOfArrayUsedToCreateSphream()
+	{
+		$sphream = Sphream::of([5, 876, 2]);
+		$this->assertEquals(3, $sphream->count());
+	}
+
+	public function testIfCountReturnsZeroWithSphreamCreatedFromEmptyGenerator()
+	{
+		$generator = function () {
+			yield from [];
+		};
+		$sphream = Sphream::of($generator());
+		$this->assertEquals(0, $sphream->count());
+	}
+
+	public function testIfCountReturnsSizeOfGeneratorUsedToCreateSphream()
+	{
+		$generator = function () {
+			yield from [54, 323, 235];
+		};
+		$sphream = Sphream::of($generator());
+		$this->assertEquals(3, $sphream->count());
+	}
+
+	public function testIfToArrayReturnsEmptyArrayFromSphreamCreatedFormEmptyArray()
+	{
+		$sphream = Sphream::of([]);
+		$this->assertEquals([], $sphream->toArray());
+	}
+
+	public function testIfToArrayReturnsEmptyArrayFromSphreamCreatedFromEmptyGenerator()
+	{
+		$generator = function () {
+			yield from [];
+		};
+		$sphream = Sphream::of($generator());
+		$this->assertEquals([], $sphream->toArray());
+	}
+
+	public function testIfToArrayReturnsArrayUsedToCreateSphream()
+	{
+		$sphream = Sphream::of([432, 234, 2]);
+		$this->assertEquals([432, 234, 2], $sphream->toArray());
+	}
+
+	public function testIfToArrayReturnsElementsFormGeneratorUsedToCreateSphream()
+	{
+		$generator = function () {
+			yield from [432, 234, 2];
+		};
+		$sphream = Sphream::of($generator());
+		$this->assertEquals([432, 234, 2], $sphream->toArray());
+	}
+
+	public function testIfRangeReturnsEmptySphreamWithInputsEqual()
+	{
+		$sphream = Sphream::range(4, 4);
+		$this->assertEquals(0, $sphream->count());
+	}
+
+	public function testIfRangeReturnsSphreamWithIntegers()
+	{
+		$sphream = Sphream::range(3, 9);
+		$this->assertEquals([3, 4, 5, 6, 7, 8], $sphream->toArray());
+	}
+
+	public function testIfRangeThrowsInvalidExceptionIfFirstArgumentIsLarger()
+	{
+		$this->expectException(InvalidArgumentException::class);
+		Sphream::range(5, 4);
+	}
+
+	public function testIfRepeatThrowsInvalidArgumentIfSecondArgumentIsNegative()
+	{
+		$this->expectException(InvalidArgumentException::class);
+		Sphream::repeat('foo', -1);
+	}
+
+	public function testIfRepeatReturnsSphreamWithFirstArgumentRepeated()
+	{
+		$sphream = Sphream::repeat('foo', 3);
+		$this->assertEquals(['foo', 'foo', 'foo'], $sphream->toArray());
+	}
+
+	public function testIfGenerateReturnsSphream()
+	{
+		$supplier = function () {
+			return 4;
+		};
+		$sphream = Sphream::generate($supplier);
+		$this->assertInstanceOf(Sphream::class, $sphream);
+	}
 }

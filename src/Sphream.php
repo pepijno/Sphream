@@ -17,6 +17,42 @@ class Sphream
 		return new self($iterable);
 	}
 
+	public static function range(int $from, int $to): Sphream
+	{
+		if ($from > $to) {
+			throw new \InvalidArgumentException("First argument must be smaller than second argument");
+		}
+		$generator = function () use ($from, $to) {
+			for ($i = $from; $i < $to; $i++) {
+				yield $i;
+			}
+		};
+		return self::of($generator());
+	}
+
+	public static function repeat($toRepeat, int $repeatAmount): Sphream
+	{
+		if ($repeatAmount < 0) {
+			throw new \InvalidArgumentException("Amount to repeat cannot be negative");
+		}
+		$generator = function () use ($toRepeat, $repeatAmount) {
+			for ($i = 0; $i < $repeatAmount; $i++) {
+				yield $toRepeat;
+			}
+		};
+		return new self($generator());
+	}
+
+	public static function generate(callable $supplier): Sphream
+	{
+		$generator = function () use ($supplier) {
+			while (true) {
+				yield $supplier();
+			}
+		};
+		return new self($generator());
+	}
+
 	public function first()
 	{
 		if (is_array($this->iterable)) {
@@ -50,5 +86,21 @@ class Sphream
 				return $item;
 			}
 		}
+	}
+
+	public function count(): int
+	{
+		if (is_array($this->iterable)) {
+			return sizeof($this->iterable);
+		}
+		return iterator_count($this->iterable);
+	}
+
+	public function toArray(): array
+	{
+		if (is_array($this->iterable)) {
+			return $this->iterable;
+		}
+		return iterator_to_array($this->iterable);
 	}
 }
