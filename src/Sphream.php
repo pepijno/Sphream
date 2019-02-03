@@ -17,6 +17,11 @@ class Sphream
 		return new self($iterable);
 	}
 
+	public static function mempty(): Sphream
+	{
+		return new self([]);
+	}
+
 	public static function range(int $from, int $to): Sphream
 	{
 		if ($from > $to) {
@@ -51,6 +56,14 @@ class Sphream
 			}
 		};
 		return new self($generator());
+	}
+
+	public function isEmpty()
+	{
+		if (is_array($this->iterable)) {
+			return sizeof($this->iterable) == 0;
+		}
+		return !$this->iterable->valid();
 	}
 
 	public function first()

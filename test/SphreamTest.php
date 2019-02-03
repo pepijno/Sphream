@@ -28,6 +28,31 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 	}
 
 	/**
+	 * @dataProvider isEmptyProvider
+	 */
+	public function test_isEmpty_returns_if_Sphream_is_empty($ofInput, $expectedResult)
+	{
+		$sphream = Sphream::of($ofInput);
+		$this->assertEquals($expectedResult, $sphream->isEmpty());
+	}
+
+	public function isEmptyProvider()
+	{
+		return [
+			[ [], true ],
+			[ [1, 2], false ],
+			[ (function () { yield from []; })(), true],
+			[ (function () { yield 1; })(), false],
+		];
+	}
+
+	public function test_mempty_returns_empty_Sphream()
+	{
+		$sphream = Sphream::mempty();
+		$this->assertTrue($sphream->isEmpty());
+	}
+
+	/**
 	 * @dataProvider emptySphreamProvider
 	 */
 	public function test_if_first_throws_EmptySphream_from_empty_Sphream($ofInput)
