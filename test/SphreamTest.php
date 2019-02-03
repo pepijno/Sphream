@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+use Sphream\ClosedSphream;
 use Sphream\EmptySphream;
 use Sphream\Sphream;
 
@@ -12,19 +13,21 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		new Sphream();
 	}
 
-	public function test_of_creates_Sphream_from_array()
+	/**
+	 * @dataProvider ofProvider
+	 */
+	public function test_if_of_creates_Sphream($toInput, $class)
 	{
-		$sphream = Sphream::of([]);
-		$this->assertInstanceOf(Sphream::class, $sphream);
+		$sphream = Sphream::of($toInput);
+		$this->assertInstanceOf($class, $sphream);
 	}
 
-	public function test_of_creates_Sphream_of_generator()
+	public function ofProvider()
 	{
-		$generator = function () {
-			yield 74;
-		};
-		$sphream = Sphream::of($generator());
-		$this->assertInstanceOf(Sphream::class, $sphream);
+		return [
+			[ [1, 2], Sphream::class],
+			[ (function () { yield 1; })(), Sphream::class],
+		];
 	}
 
 	/**
@@ -53,6 +56,44 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 	}
 
 	/**
+	 * @dataProvider isClosedProvider
+	 */
+	public function test_if_isClosed_returns_if_Sphream_is_closed(Sphream $sphream, $expectedResult)
+	{
+		$this->assertEquals($expectedResult, $sphream->isClosed());
+	}
+
+	public function isClosedProvider()
+	{
+		$closedSphreamFromArray = Sphream::of([]);
+		$closedSphreamFromArray->count();
+		$unCountedSphreamFromArray = Sphream::of([]);
+		$countedSphreamFromGenerator = Sphream::of((function () { yield from []; })());
+		$countedSphreamFromGenerator->count();
+		$unCountedSphreamFromGenerator = Sphream::of((function () { yield from []; })());
+		return [
+			[$closedSphreamFromArray, true],
+			[$unCountedSphreamFromArray, false],
+			[$countedSphreamFromGenerator, true],
+			[$unCountedSphreamFromGenerator, false],
+		];
+	}
+
+	public function test_if_close_closes_Sphream()
+	{
+		$sphream = Sphream::of([1, 2]);
+		$sphream->close();
+		$this->assertTrue($sphream->isClosed());
+	}
+
+	public function test_if_first_throws_ClosedSphream_on_closed_Sphream()
+	{
+		$sphream = Sphream::of([2])->close();
+		$this->expectException(ClosedSphream::class);
+		$sphream->first();
+	}
+
+	/**
 	 * @dataProvider emptySphreamProvider
 	 */
 	public function test_if_first_throws_EmptySphream_from_empty_Sphream($ofInput)
@@ -61,7 +102,6 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$this->expectException(EmptySphream::class);
 		$sphream->first();
 	}
-
 	public function emptySphreamProvider()
 	{
 		$generator = function () {
@@ -73,57 +113,57 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		];
 	}
 
-	/**
-	 * @dataProvider firstElementFromArrayProvider
-	 */
-	public function test_if_first_returns_first_element_from_Sphream_created_from_array($array, $expected)
+
+	public function test_if_first_closes_Sphream()
 	{
-		$sphream = Sphream::of($array);
+		$sphream = Sphream::of([1]);
+		$sphream->first();
+		$this->assertTrue($sphream->isClosed());
+	}
+
+	/**
+	 * @dataProvider firstElementProvider
+	 */
+	public function test_if_first_returns_first_element_from_Sphream($toInput, $expected)
+	{
+		$sphream = Sphream::of($toInput);
 		$this->assertEquals($expected, $sphream->first());
 	}
 
-	public function firstElementFromArrayProvider()
+	public function firstElementProvider()
 	{
 		return [
 			[ ["a", "b", "5"], "a"],
 			[ [83, 23523, 1], 83],
 			[ ["Hello", new Exception(), "World"], "Hello"],
 			[ [[], [1], [1, 2]], []],
-		];
-	}
-
-	/**
-	 * @dataProvider firstElementFromGeneratorProvider
-	 */
-	public function test_if_first_returns_first_generated_item_from_generated_Sphream($generator, $expectedFirst)
-	{
-		$sphream = Sphream::of($generator());
-		$this->assertEquals($expectedFirst, $sphream->first());
-	}
-
-	public function firstElementFromGeneratorProvider()
-	{
-		return [
-			[ function () {
+			[ (function () {
 				yield "a";
 				yield "b";
 				yield "5";
-			}, "a"],
-			[ function () {
+			})(), "a"],
+			[ (function () {
 				yield -99;
 				yield 92137;
 				yield 239;
-			}, -99],
-			[ function () {
+			})(), -99],
+			[ (function () {
 				yield new Exception();
 				yield new EmptySphream();
-			}, new Exception()],
-			[ function () {
+			})(), new Exception()],
+			[ (function () {
 				yield [];
 				yield "ou";
 				yield [[]];
-			}, []],
+			})(), []],
 		];
+	}
+
+	public function test_if_last_throws_ClosedSphream_from_closed_Sphream()
+	{
+		$sphream = Sphream::of([2])->close();
+		$this->expectException(ClosedSphream::class);
+		$sphream->last();
 	}
 
 	/**
@@ -136,62 +176,56 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$sphream->last();
 	}
 
-	/**
-	 * @dataProvider lastElementFromArrayProvider
-	 */
-	public function test_if_last_returns_last_element_from_array_used_to_create_Sphream($array, $expectedLast)
+	public function test_if_last_closes_Sphream()
 	{
-		$sphream = Sphream::of($array);
+		$sphream = Sphream::of([1]);
+		$sphream->last();
+		$this->assertTrue($sphream->isClosed());
+	}
+
+	/**
+	 * @dataProvider lastElementProvider
+	 */
+	public function test_if_last_returns_last_element_from_Sphream($toInput, $expectedLast)
+	{
+		$sphream = Sphream::of($toInput);
 		$this->assertEquals($expectedLast, $sphream->last());
 	}
 
-	public function lastElementFromArrayProvider()
+	public function lastElementProvider()
 	{
 		return [
 			[ ["a", "b", "5"], "5"],
 			[ [83, 23523, 1], 1],
 			[ ["Hello", new Exception(), "World"], "World"],
 			[ [[], [1], [1, 2]], [1, 2]],
-		];
-	}
-
-	/**
-	 * @dataProvider lastElementFromGeneratorProvider
-	 */
-	public function test_if_last_returns_last_generated_item_from_Sphream()
-	{
-		$generator = function () {
-			yield 4;
-			yield 91;
-			yield 8;
-		};
-		$sphream = Sphream::of($generator());
-		$this->assertEquals(8, $sphream->last());
-	}
-
-	public function lastElementFromGeneratorProvider()
-	{
-		return [
-			[ function () {
+			[ (function () {
 				yield "a";
 				yield "b";
 				yield "5";
-			}, "5"],
-			[ function () {
+			})(), "5"],
+			[ (function () {
 				yield -99;
 				yield 92137;
 				yield 239;
-			}, 239],
-			[ function () {
+			})(), 239],
+			[ (function () {
 				yield new Exception();
 				yield new EmptySphream();
-			}, new EmptySphream()],
-			[ function () {
+			})(), new EmptySphream()],
+			[ (function () {
 				yield [];
 				yield "ou";
 				yield [[]];
-			}, [[]]],
+			})(), [[]]]
 		];
+	}
+
+	public function test_if_count_throws_ClosedSphream_on_closed_Shpream()
+	{
+		$sphream = Sphream::of([2])->close();
+		$this->expectException(ClosedSphream::class);
+		$sphream->count();
 	}
 
 	/**
@@ -220,6 +254,20 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		];
 	}
 
+	public function test_if_count_closes_Sphream()
+	{
+		$sphream = Sphream::of([1]);
+		$sphream->count();
+		$this->assertTrue($sphream->isClosed());
+	}
+
+	public function test_if_toArray_throws_ClosedSphream_from_closed_Sphream()
+	{
+		$sphream = Sphream::of([2])->close();
+		$this->expectException(ClosedSphream::class);
+		$sphream->toArray();
+	}
+
 	/**
 	 * @dataProvider toArrayProvider
 	 */
@@ -242,6 +290,13 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 				yield new EmptySphream();
 			})(), [7689, "Grant", new EmptySphream()] ],
 		];
+	}
+
+	public function test_if_toArray_closes_Sphream()
+	{
+		$sphream = Sphream::of([1]);
+		$sphream->toArray();
+		$this->assertTrue($sphream->isClosed());
 	}
 
 	/**
@@ -322,6 +377,13 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$this->assertInstanceOf(Sphream::class, $sphream);
 	}
 
+	public function test_if_filter_throws_ClosedSphream_form_closed_Sphream()
+	{
+		$sphream = Sphream::of([3])->close();
+		$this->expectException(ClosedSphream::class);
+		$sphream->filter(function ($item) { return true; });
+	}
+
 	/**
 	 * @dataProvider filterProvider
 	 */
@@ -358,6 +420,13 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		];
 	}
 
+	public function test_if_map_throws_ClosedSphream_form_closed_Sphream()
+	{
+		$sphream = Sphream::of([3])->close();
+		$this->expectException(ClosedSphream::class);
+		$sphream->map(function ($item) { return $item; });
+	}
+
 	/**
 	 * @dataProvider mapProvider
 	 */
@@ -390,6 +459,13 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		];
 	}
 
+	public function test_if_take_throws_ClosedSphream_on_closed_Sphream()
+	{
+		$sphream = Sphream::of([1, 2])->close();
+		$this->expectException(ClosedSphream::class);
+		$sphream->take(1);
+	}
+
 	/**
 	 * @dataProvider takeProvider
 	 */
@@ -414,6 +490,13 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 			[ $generator(), 0, [] ],
 			[ $generator(), 2, ["iow", 9] ]
 		];
+	}
+
+	public function test_if_drop_throws_ClosedSphream_form_closed_Sphream()
+	{
+		$sphream = Sphream::of([3])->close();
+		$this->expectException(ClosedSphream::class);
+		$sphream->drop(4);
 	}
 
 	/**
