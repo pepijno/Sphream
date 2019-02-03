@@ -127,4 +127,36 @@ class Sphream
 		})();
 		return $this;
 	}
+
+	public function take(int $amount): self
+	{
+		$iterable = $this->iterable;
+		$this->iterable = (function () use ($iterable, $amount) {
+			$i = 0;
+			foreach ($iterable as $item) {
+				if ($i < $amount) {
+					yield $item;
+					$i++;
+					continue;
+				}
+			}
+		})();
+		return $this;
+	}
+
+	public function drop(int $amount): self
+	{
+		$iterable = $this->iterable;
+		$this->iterable = (function () use ($iterable, $amount) {
+			$i = 0;
+			foreach ($iterable as $item) {
+				if ($i < $amount) {
+					$i++;
+					continue;
+				}
+				yield $item;
+			}
+		})();
+		return $this;
+	}
 }
