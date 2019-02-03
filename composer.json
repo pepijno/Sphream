@@ -2,12 +2,14 @@
     "name": "pepijno/sphream",
     "type": "library",
     "require": {
-        "phpunit/phpunit": "^8.0"
     },
     "autoload": {
         "psr-4": {
             "Sphream\\": "src/"
         }
     },
-    "description": "A library for using functional style streams"
+    "description": "A library for using functional style streams",
+    "require-dev": {
+        "phpunit/phpunit": "^8.0"
+    }
 }
