@@ -296,4 +296,58 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$sphream = Sphream::generate($supplier);
 		$this->assertInstanceOf(Sphream::class, $sphream);
 	}
+
+	/**
+	 * @dataProvider filterProvider
+	 */
+	public function test_if_filter_filters_elements_of_Sphream($ofInput, $filter, $expectedArray)
+	{
+		$sphream = Sphream::of($ofInput);
+		$sphream->filter($filter);
+		$this->assertEquals($expectedArray, $sphream->toArray());
+	}
+
+	public function filterProvider()
+	{
+		$allAllow = function ($item) {
+			return true;
+		};
+		$allDeny = function ($item) {
+			return false;
+		};
+		$filterOdd = function ($item) {
+			return ($item % 2) == 0;
+		};
+		return [
+			[ [], $filterOdd, [] ],
+			[ [2, 23, 5], $allAllow, [2, 23, 5] ],
+			[ [782, 2, 1], $allDeny, [] ],
+			[ [782, 91, 3, 5, 8], $filterOdd, [782, 8] ]
+		];
+	}
+
+	/**
+	 * @dataProvider mapProvider
+	 */
+	public function test_if_map_changes_elements_of_Sphream($ofInput, $map, $expectedArray)
+	{
+		$sphream = Sphream::of($ofInput);
+		$sphream->map($map);
+		$this->assertEquals($expectedArray, $sphream->toArray());
+	}
+
+	public function mapProvider()
+	{
+		$identity = function ($item) {
+			return $item;
+		};
+		$addTwo = function ($item) {
+			return $item + 2;
+		};
+		return [
+			[ [], $addTwo, [] ],
+			[ [4, 5, 890], $identity, [4, 5, 890] ],
+			[ [83, -12, 4], $addTwo, [85, -10, 6] ]
+		];
+	}
 }

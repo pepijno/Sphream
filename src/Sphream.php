@@ -103,4 +103,28 @@ class Sphream
 		}
 		return iterator_to_array($this->iterable);
 	}
+
+	public function filter(callable $filter): self
+	{
+		$iterable = $this->iterable;
+		$this->iterable = (function () use ($iterable, $filter) {
+			foreach ($iterable as $item) {
+				if ($filter($item)) {
+					yield $item;
+				}
+			}
+		})();
+		return $this;
+	}
+
+	public function map(callable $map): self
+	{
+		$iterable = $this->iterable;
+		$this->iterable = (function () use ($iterable, $map) {
+			foreach ($iterable as $item) {
+				yield $map($item);
+			}
+		})();
+		return $this;
+	}
 }
