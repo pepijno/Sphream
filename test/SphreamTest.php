@@ -318,11 +318,18 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$filterOdd = function ($item) {
 			return ($item % 2) == 0;
 		};
+		$generator = function () {
+			yield 82;
+			yield 93;
+			yield 1;
+		};
 		return [
 			[ [], $filterOdd, [] ],
 			[ [2, 23, 5], $allAllow, [2, 23, 5] ],
 			[ [782, 2, 1], $allDeny, [] ],
-			[ [782, 91, 3, 5, 8], $filterOdd, [782, 8] ]
+			[ [782, 91, 3, 5, 8], $filterOdd, [782, 8] ],
+			[ $generator(), $allAllow, [82, 93, 1] ],
+			[ $generator(), $filterOdd, [82] ]
 		];
 	}
 
@@ -344,10 +351,69 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 		$addTwo = function ($item) {
 			return $item + 2;
 		};
+		$generator = function () {
+			yield -3;
+			yield 97;
+			yield 0;
+		};
 		return [
 			[ [], $addTwo, [] ],
 			[ [4, 5, 890], $identity, [4, 5, 890] ],
-			[ [83, -12, 4], $addTwo, [85, -10, 6] ]
+			[ [83, -12, 4], $addTwo, [85, -10, 6] ],
+			[ $generator(), $identity, [-3, 97, 0] ],
+			[ $generator(), $addTwo, [-1, 99, 2] ]
+		];
+	}
+
+	/**
+	 * @dataProvider takeProvider
+	 */
+	public function test_if_take_takes_first_elements_of_Sphream($ofInput, $amount, $expectedArray)
+	{
+		$sphream = Sphream::of($ofInput);
+		$sphream->take($amount);
+		$this->assertEquals($expectedArray, $sphream->toArray());
+	}
+
+	public function takeProvider()
+	{
+		$generator = function () {
+			yield "iow";
+			yield 9;
+			yield new Exception();
+		};
+		return [
+			[ [], 10, [] ],
+			[ [1, 2], 0, [] ],
+			[ ["t", "c", "w", "p"], 2, ["t", "c"] ],
+			[ $generator(), 0, [] ],
+			[ $generator(), 2, ["iow", 9] ]
+		];
+	}
+
+	/**
+	 * @dataProvider dropProvider
+	 */
+	public function test_if_drop_removes_first_elements_of_Sphream($ofInput, $amount, $expectedArray)
+	{
+		$sphream = Sphream::of($ofInput);
+		$sphream->drop($amount);
+		$this->assertEquals($expectedArray, $sphream->toArray());
+	}
+
+	public function dropProvider()
+	{
+		$generator = function () {
+			yield "iow";
+			yield 9;
+			yield new Exception();
+		};
+		return [
+			[ [], 10, [] ],
+			[ [1, 2], 0, [1, 2] ],
+			[ ["t", "c", "w", "p"], 2, ["w", "p"] ],
+			[ $generator(), 0, ["iow", 9, new Exception()] ],
+			[ $generator(), 2, [new Exception()] ]
 		];
 	}
 }
