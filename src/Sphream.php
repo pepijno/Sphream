@@ -8,14 +8,17 @@ class Sphream
 	private $iterable;
 	private $closed;
 
-	private function __construct(iterable $iterable)
+	private function __construct($iterable)
 	{
 		$this->iterable = $iterable;
 		$this->closed = false;
 	}
 
-	public static function of(iterable $iterable): Sphream
+	public static function of($iterable): Sphream
 	{
+		if (!is_array($iterable) && !($iterable instanceof \Traversable)) {
+			throw new \InvalidArgumentException("Input must be an array or an instance of a Traversable.");
+		}
 		return new self($iterable);
 	}
 

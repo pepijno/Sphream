@@ -14,6 +14,24 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 	}
 
 	/**
+	 * @dataProvider ofInvalidArgumentProvider
+	 */
+	public function test_if_of_throws_InvalidArgumentException_if_argument_is_not_iterable($input)
+	{
+		$this->expectException(InvalidArgumentException::class);
+		Sphream::of($input);
+	}
+
+	public function ofInvalidArgumentProvider()
+	{
+		return [
+			[ new Exception() ],
+			[ 1 ],
+			[ "Hello World" ]
+		];
+	}
+
+	/**
 	 * @dataProvider ofProvider
 	 */
 	public function test_if_of_creates_Sphream($toInput, $class)
