@@ -524,4 +524,64 @@ final class SphreamTest extends \PHPUnit\Framework\TestCase
 			[ $generator(), 2, [new Exception()] ]
 		];
 	}
+
+	public function test_if_dropWhile_throws_ClosedSphream_from_closed_Sphream()
+	{
+		$sphream = Sphream::of([])->close();
+		$this->expectException(ClosedSphream::class);
+		$sphream->dropWhile(function ($item) { return false; });
+	}
+
+	/**
+	 * @dataProvider dropWhileProvider
+	 */
+	public function test_if_dropWhile_returns_correct_elements($ofInput, $callable, $expectedArray)
+	{
+		$sphream = Sphream::of($ofInput)->dropWhile($callable);
+		$this->assertEquals($expectedArray, $sphream->toArray());
+	}
+
+	public function dropWhileProvider()
+	{
+		return [
+			[ [], function ($item) { return $item > 5; }, [] ],
+			[ [923, -1], function ($item) { return true; }, [] ],
+			[ [-38, 28, 29], function ($item) { return false; }, [-38, 28, 29] ],
+			[ [921, -4, -3 ], function ($item) { return $item > 0; }, [-4, -3] ],
+			[ (function () {
+				yield 892;
+				yield 0;
+			})(), function ($item) { return false; }, [892, 0] ]
+		];
+	}
+
+	public function test_if_takeWhile_throws_ClosedSphream_from_closed_Sphream()
+	{
+		$sphream = Sphream::of([])->close();
+		$this->expectException(ClosedSphream::class);
+		$sphream->takeWhile(function ($item) { return false; });
+	}
+
+	/**
+	 * @dataProvider takeWhileProvider
+	 */
+	public function test_if_takeWhile_returns_correct_elements($ofInput, $callable, $expectedArray)
+	{
+		$sphream = Sphream::of($ofInput)->takeWhile($callable);
+		$this->assertEquals($expectedArray, $sphream->toArray());
+	}
+
+	public function takeWhileProvider()
+	{
+		return [
+			[ [], function ($item) { return $item < 5; }, [] ],
+			[ [923, -1], function ($item) { return true; }, [923, -1] ],
+			[ [-38, 28, 29], function ($item) { return false; }, [] ],
+			[ [921, -4, -3 ], function ($item) { return $item > 0; }, [921] ],
+			[ (function () {
+				yield 892;
+				yield 0;
+			})(), function ($item) { return true; }, [892, 0] ]
+		];
+	}
 }

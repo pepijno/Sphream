@@ -213,4 +213,40 @@ class Sphream
 		})();
 		return $this;
 	}
+
+	public function dropWhile(callable $callable): Sphream
+	{
+		if ($this->isClosed()) {
+			throw new ClosedSphream();
+		}
+		$iterable = $this->iterable;
+		$this->iterable = (function () use ($iterable, $callable) {
+			$dropping = true;
+			foreach ($iterable as $item) {
+				if ($dropping && $callable($item)) {
+					continue;
+				}
+				$dropping = false;
+				yield $item;
+			}
+		})();
+		return $this;
+	}
+
+	public function takeWhile(callable $callable): Sphream
+	{
+		if ($this->isClosed()) {
+			throw new ClosedSphream();
+		}
+		$iterable = $this->iterable;
+		$this->iterable = (function () use ($iterable, $callable) {
+			foreach ($iterable as $item) {
+				if (!$callable($item)) {
+					return;
+				}
+				yield $item;
+			}
+		})();
+		return $this;
+	}
 }
