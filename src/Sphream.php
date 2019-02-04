@@ -6,15 +6,22 @@ namespace Sphream;
 class Sphream
 {
 	private $iterable;
+	private $closed;
 
 	private function __construct(iterable $iterable)
 	{
 		$this->iterable = $iterable;
+		$this->closed = false;
 	}
 
 	public static function of(iterable $iterable): Sphream
 	{
 		return new self($iterable);
+	}
+
+	public static function mempty(): Sphream
+	{
+		return new self([]);
 	}
 
 	public static function range(int $from, int $to): Sphream
@@ -53,8 +60,31 @@ class Sphream
 		return new self($generator());
 	}
 
+	public function isEmpty()
+	{
+		if (is_array($this->iterable)) {
+			return sizeof($this->iterable) == 0;
+		}
+		return !$this->iterable->valid();
+	}
+
+	public function isClosed()
+	{
+		return $this->closed;
+	}
+
+	public function close(): self
+	{
+		$this->closed = true;
+		return $this;
+	}
+
 	public function first()
 	{
+		if ($this->isClosed()) {
+			throw new ClosedSphream();
+		}
+		$this->close();
 		if (is_array($this->iterable)) {
 			if (sizeof($this->iterable) == 0) {
 				throw new EmptySphream();
@@ -70,6 +100,10 @@ class Sphream
 
 	public function last()
 	{
+		if ($this->isClosed()) {
+			throw new ClosedSphream();
+		}
+		$this->close();
 		if (is_array($this->iterable)) {
 			if (sizeof($this->iterable) == 0) {
 				throw new EmptySphream();
@@ -90,6 +124,10 @@ class Sphream
 
 	public function count(): int
 	{
+		if ($this->isClosed()) {
+			throw new ClosedSphream();
+		}
+		$this->close();
 		if (is_array($this->iterable)) {
 			return sizeof($this->iterable);
 		}
@@ -98,6 +136,10 @@ class Sphream
 
 	public function toArray(): array
 	{
+		if ($this->isClosed()) {
+			throw new ClosedSphream();
+		}
+		$this->close();
 		if (is_array($this->iterable)) {
 			return $this->iterable;
 		}
@@ -106,6 +148,9 @@ class Sphream
 
 	public function filter(callable $filter): self
 	{
+		if ($this->isClosed()) {
+			throw new ClosedSphream();
+		}
 		$iterable = $this->iterable;
 		$this->iterable = (function () use ($iterable, $filter) {
 			foreach ($iterable as $item) {
@@ -119,6 +164,9 @@ class Sphream
 
 	public function map(callable $map): self
 	{
+		if ($this->isClosed()) {
+			throw new ClosedSphream();
+		}
 		$iterable = $this->iterable;
 		$this->iterable = (function () use ($iterable, $map) {
 			foreach ($iterable as $item) {
@@ -130,6 +178,9 @@ class Sphream
 
 	public function take(int $amount): self
 	{
+		if ($this->closed) {
+			throw new ClosedSphream();
+		}
 		$iterable = $this->iterable;
 		$this->iterable = (function () use ($iterable, $amount) {
 			$i = 0;
@@ -146,6 +197,9 @@ class Sphream
 
 	public function drop(int $amount): self
 	{
+		if ($this->closed) {
+			throw new ClosedSphream();
+		}
 		$iterable = $this->iterable;
 		$this->iterable = (function () use ($iterable, $amount) {
 			$i = 0;
