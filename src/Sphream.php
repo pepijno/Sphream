@@ -191,7 +191,8 @@ class Sphream
 				if ($i < $amount) {
 					yield $item;
 					$i++;
-					continue;
+				} else {
+					return;
 				}
 			}
 		})();
