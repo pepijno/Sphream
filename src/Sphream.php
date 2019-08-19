@@ -7,11 +7,15 @@ class Sphream
 {
 	private $iterable;
 	private $closed;
+	private $callables;
+	private $operations;
 
 	private function __construct($iterable)
 	{
 		$this->iterable = $iterable;
 		$this->closed = false;
+		$this->callables = [];
+		$this->operations = [];
 	}
 
 	public static function of($iterable): Sphream
@@ -65,10 +69,16 @@ class Sphream
 
 	public function isEmpty()
 	{
-		if (is_array($this->iterable)) {
-			return sizeof($this->iterable) == 0;
+		if ($this->isClosed()) {
+			throw new ClosedSphream();
 		}
-		return !$this->iterable->valid();
+		$this->close();
+		$this->operations[] = new IsEmpty();
+		$value = true;
+		$this->compile(function ($item) use (&$value) {
+			$value = false;
+		});
+		return $value;
 	}
 
 	public function isClosed()
@@ -88,17 +98,12 @@ class Sphream
 			throw new ClosedSphream();
 		}
 		$this->close();
-		if (is_array($this->iterable)) {
-			if (sizeof($this->iterable) == 0) {
-				throw new EmptySphream();
-			}
-			return $this->iterable[0];
-		}
-		$this->iterable->rewind();
-		if (!$this->iterable->valid()) {
-			throw new EmptySphream();
-		}
-		return $this->iterable->current();
+		$this->operations[] = new First("first" . sizeof($this->operations));
+		$value;
+		$this->compile(function ($item) use (&$value) {
+			$value = $item;
+		});
+		return $value;
 	}
 
 	public function last()
@@ -107,22 +112,12 @@ class Sphream
 			throw new ClosedSphream();
 		}
 		$this->close();
-		if (is_array($this->iterable)) {
-			if (sizeof($this->iterable) == 0) {
-				throw new EmptySphream();
-			}
-			return end($this->iterable);
-		}
-		if (!$this->iterable->valid()) {
-			throw new EmptySphream();
-		}
-		while ($this->iterable->valid()) {
-			$item = $this->iterable->current();
-			$this->iterable->next();
-			if (!$this->iterable->valid()) {
-				return $item;
-			}
-		}
+		$this->operations[] = new Last("last" . sizeof($this->operations));
+		$value;
+		$this->compile(function ($item) use (&$value) {
+			$value = $item;
+		});
+		return $value;
 	}
 
 	public function count(): int
@@ -131,10 +126,11 @@ class Sphream
 			throw new ClosedSphream();
 		}
 		$this->close();
-		if (is_array($this->iterable)) {
-			return sizeof($this->iterable);
-		}
-		return iterator_count($this->iterable);
+		$total = 0;
+		$this->compile(function ($item) use (&$total) {
+			$total++;
+		});
+		return $total;
 	}
 
 	public function toArray(): array
@@ -143,10 +139,11 @@ class Sphream
 			throw new ClosedSphream();
 		}
 		$this->close();
-		if (is_array($this->iterable)) {
-			return $this->iterable;
-		}
-		return iterator_to_array($this->iterable);
+		$array = [];
+		$this->compile(function ($item) use (&$array) {
+			$array[] = $item;
+		});
+		return $array;
 	}
 
 	public function filter(callable $filter): self
@@ -154,14 +151,9 @@ class Sphream
 		if ($this->isClosed()) {
 			throw new ClosedSphream();
 		}
-		$iterable = $this->iterable;
-		$this->iterable = (function () use ($iterable, $filter) {
-			foreach ($iterable as $item) {
-				if ($filter($item)) {
-					yield $item;
-				}
-			}
-		})();
+		$pointer = "\$this->callables[" . sizeof($this->callables) . "]";
+		$this->callables[] = $filter;
+		$this->operations[] = new Filter($pointer);
 		return $this;
 	}
 
@@ -170,12 +162,9 @@ class Sphream
 		if ($this->isClosed()) {
 			throw new ClosedSphream();
 		}
-		$iterable = $this->iterable;
-		$this->iterable = (function () use ($iterable, $map) {
-			foreach ($iterable as $item) {
-				yield $map($item);
-			}
-		})();
+		$pointer = "\$this->callables[" . sizeof($this->callables) . "]";
+		$this->callables[] = $map;
+		$this->operations[] = new Map($pointer);
 		return $this;
 	}
 
@@ -184,18 +173,7 @@ class Sphream
 		if ($this->closed) {
 			throw new ClosedSphream();
 		}
-		$iterable = $this->iterable;
-		$this->iterable = (function () use ($iterable, $amount) {
-			$i = 0;
-			foreach ($iterable as $item) {
-				if ($i < $amount) {
-					yield $item;
-					$i++;
-				} else {
-					return;
-				}
-			}
-		})();
+		$this->operations[] = new Take($amount, "take" . sizeof($this->operations));
 		return $this;
 	}
 
@@ -204,17 +182,7 @@ class Sphream
 		if ($this->closed) {
 			throw new ClosedSphream();
 		}
-		$iterable = $this->iterable;
-		$this->iterable = (function () use ($iterable, $amount) {
-			$i = 0;
-			foreach ($iterable as $item) {
-				if ($i < $amount) {
-					$i++;
-					continue;
-				}
-				yield $item;
-			}
-		})();
+		$this->operations[] = new Drop($amount, "drop" . sizeof($this->operations));
 		return $this;
 	}
 
@@ -223,17 +191,9 @@ class Sphream
 		if ($this->isClosed()) {
 			throw new ClosedSphream();
 		}
-		$iterable = $this->iterable;
-		$this->iterable = (function () use ($iterable, $callable) {
-			$dropping = true;
-			foreach ($iterable as $item) {
-				if ($dropping && $callable($item)) {
-					continue;
-				}
-				$dropping = false;
-				yield $item;
-			}
-		})();
+		$pointer = "\$this->callables[" . sizeof($this->callables) . "]";
+		$this->callables[] = $callable;
+		$this->operations[] = new DropWhile($pointer, "dropWhile" . sizeof($this->operations));
 		return $this;
 	}
 
@@ -242,15 +202,28 @@ class Sphream
 		if ($this->isClosed()) {
 			throw new ClosedSphream();
 		}
-		$iterable = $this->iterable;
-		$this->iterable = (function () use ($iterable, $callable) {
-			foreach ($iterable as $item) {
-				if (!$callable($item)) {
-					return;
-				}
-				yield $item;
-			}
-		})();
+		$pointer = "\$this->callables[" . sizeof($this->callables) . "]";
+		$this->callables[] = $callable;
+		$this->operations[] = new TakeWhile($pointer, "takeWhile" . sizeof($this->operations));
 		return $this;
+	}
+
+	private function compile(callable $callable)
+	{
+		$beforeLoop = array_reduce(array_reverse($this->operations), function ($body, $operation) {
+			return "{$body} " . $operation->beforeLoop();
+		});
+
+		$afterLoop = array_reduce(array_reverse($this->operations), function ($body, $operation) {
+			return "{$body} " . $operation->afterLoop();
+		});
+
+		$reduced = array_reduce(array_reverse($this->operations), function ($body, $operation) {
+			return $operation->reduce($body);
+		}, "\$callable(\$item);");
+
+		$program = "{$beforeLoop} foreach (\$this->iterable as \$item) { {$reduced} } {$afterLoop}";
+
+		eval($program);
 	}
 }
