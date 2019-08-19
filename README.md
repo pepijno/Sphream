@@ -15,6 +15,11 @@ $newIntegers = Sphream\Sphream::of($integers)
 // $newIntegers is equal to [ 300, 900 ]
 ```
 
+## Installation
+```bash
+composer require pepijno/sphream
+```
+
 ## Documentation
 
 ### Creating Sphreams
